@@ -1,5 +1,5 @@
-#include "client.h"
-#include "../common.h"
+#include "socket.h"
+#include "common.h"
 
 #include <string.h>
 #include <errno.h>

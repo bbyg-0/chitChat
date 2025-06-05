@@ -8,8 +8,8 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "../common.h"
-#include "server.h"
+#include "../common/common.h"
+#include "../common/socket.h"
 
 #define PORT 8080
 int main(int argc, char const* argv[]){

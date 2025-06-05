@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#include "../common.h"
-#include "client.h"
+#include "../common/common.h"
+#include "../common/socket.h"
 
 #define PORT 8080
 
