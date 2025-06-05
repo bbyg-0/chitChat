@@ -1,8 +1,9 @@
-#include "server.h"
+#include "client.h"
 #include "../common.h"
 
 #include <string.h>
 #include <errno.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -15,6 +16,7 @@ void inisialisasiParamThread(paramThread * param){
 	(param)->serverSocket = -1;
 	(param)->clientSocket = -1;
 	(param)->addrlen = 0;
+	(param)->litAddress = NULL;
 }
 
 void isiPort(paramThread * param, int port){
@@ -23,8 +25,14 @@ void isiPort(paramThread * param, int port){
 	(param)->address.sin_port = htons(port);
 }
 
+void isiAddress(paramThread * param, char * address){
+	if(isEmpty(param)) return;
+
+	(param)->litAddress = myStrdup(address);
+}
+
 void * preparingServerSocket(void * vParam){
-	int pass = 0;
+	int pass = -1;
 	int opt = 1;
 
 	paramThread * param = (paramThread *)vParam;
@@ -34,6 +42,7 @@ void * preparingServerSocket(void * vParam){
 		((param)->serverSocket) = socket(AF_INET, SOCK_STREAM, 0);
 		pass = ((param)->serverSocket);
 	}
+	pass = -1;
 	// Forcefully attaching socket to the port 8080
 	while(pass < 0){
 		usleep(500000);
@@ -41,6 +50,7 @@ void * preparingServerSocket(void * vParam){
 				SO_REUSEADDR | SO_REUSEPORT, 
 				&opt, sizeof(opt));
 	}
+	pass = -1;
 
 	(param)->address.sin_family = AF_INET;
 	(param)->address.sin_addr.s_addr = INADDR_ANY;
@@ -51,15 +61,50 @@ void * preparingServerSocket(void * vParam){
 		usleep(500000);
 		pass = fcntl(((param)->serverSocket), F_SETFL, flags | O_NONBLOCK);
 	}
+	pass = -1;
 
 	// Forcefully attaching socket to the port 8080
 	while(pass < 0){
 		usleep(500000);
 		pass = bind(((param)->serverSocket), (struct sockaddr*)&(param->address), sizeof((param)->address));
 	}
+	pass = -1;
 
 	return NULL;
 }
+
+void * preparingClientSocket(void * vParam){
+	int opt = 1;
+	int pass = -1;
+	paramThread * param = (paramThread *)vParam;
+
+	while(pass < 0){
+		usleep(500000);
+		pass = ((param)->clientSocket = socket(AF_INET, SOCK_STREAM, 0));	
+	}
+	pass = -1;
+
+	while(pass < 0){
+		usleep(500000);
+		pass = setsockopt(((param)->clientSocket), SOL_SOCKET,
+				SO_REUSEADDR | SO_REUSEPORT, 
+				&opt, sizeof(opt));
+	}
+	pass = -1;
+
+	(param)->address.sin_family = AF_INET;
+	
+	while(pass < 0){
+		usleep(500000);
+		pass = inet_pton(AF_INET, (param)->litAddress, &(param)->address.sin_addr);
+	}
+	pass = -1;
+
+	printf("PREPARING CLIENT BERES\n");
+
+	return NULL;
+}
+
 void * gettingClient(void * vParam){
 	paramThread * param = (paramThread *)vParam;
 	int pass = -1;
@@ -77,6 +122,20 @@ void * gettingClient(void * vParam){
 			break;
 		}
 	}
+
+	return NULL;
+}
+
+void * gettingServer(void * vParam){
+	paramThread * param = (paramThread *)vParam;
+	int pass = -1;
+
+	while (pass < 0){
+		usleep(50000);
+		pass = connect((param)->clientSocket, (struct sockaddr*)&(param)->address, sizeof((param)->address));
+		printf("GETTING SERVER\n");
+	}
+	printf("GETTING SERVER BERES\n");
 
 	return NULL;
 }

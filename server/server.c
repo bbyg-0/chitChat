@@ -24,7 +24,7 @@ void isiPort(paramThread * param, int port){
 }
 
 void * preparingServerSocket(void * vParam){
-	int pass = 0;
+	int pass = -1;
 	int opt = 1;
 
 	paramThread * param = (paramThread *)vParam;
@@ -34,6 +34,7 @@ void * preparingServerSocket(void * vParam){
 		((param)->serverSocket) = socket(AF_INET, SOCK_STREAM, 0);
 		pass = ((param)->serverSocket);
 	}
+	pass = -1;
 	// Forcefully attaching socket to the port 8080
 	while(pass < 0){
 		usleep(500000);
@@ -41,6 +42,7 @@ void * preparingServerSocket(void * vParam){
 				SO_REUSEADDR | SO_REUSEPORT, 
 				&opt, sizeof(opt));
 	}
+	pass = -1;
 
 	(param)->address.sin_family = AF_INET;
 	(param)->address.sin_addr.s_addr = INADDR_ANY;
@@ -51,12 +53,14 @@ void * preparingServerSocket(void * vParam){
 		usleep(500000);
 		pass = fcntl(((param)->serverSocket), F_SETFL, flags | O_NONBLOCK);
 	}
+	pass = -1;
 
 	// Forcefully attaching socket to the port 8080
 	while(pass < 0){
 		usleep(500000);
 		pass = bind(((param)->serverSocket), (struct sockaddr*)&(param->address), sizeof((param)->address));
 	}
+	pass = -1;
 
 	return NULL;
 }
@@ -69,14 +73,20 @@ void * gettingClient(void * vParam){
 	}
 
 	while(1){
-		if ((param->clientSocket = accept(((param)->serverSocket), (struct sockaddr*)&(param)->address, &(param)->addrlen)) < 0) {
+		if (((param)->clientSocket = accept((param)->serverSocket, (struct sockaddr*)&(param)->address, &(param)->addrlen)) < 0) {
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
 				usleep(100000);
 				continue;
-			}		}else{
+			}else{
+				perror("accept");
+				exit(EXIT_FAILURE);
+			}
+		}else{
+			printf("CONNECTION IS RECEIVED\n");
 			break;
 		}
 	}
+
 
 	return NULL;
 }

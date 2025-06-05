@@ -31,15 +31,22 @@ int main(int argc, char const* argv[]){
 	inisialisasiParamThread(&param);
 	isiPort(&param, PORT);
 
+	/*
+	preparingServerSocket((void *)&param);
+	printf("XXXXXXXXX\n");
+
+
+	*/
 	pthread_create(&prepServer, NULL, preparingServerSocket, (void *)&param);
+	pthread_join(prepServer, NULL);
+
 	pthread_create(&getClient, NULL, gettingClient, (void *)&param);
+	pthread_join(getClient, NULL);
 
   
 	pthread_create(&send, NULL, sendMessage, (void *)&(param.clientSocket));
 	pthread_create(&get, NULL, getMessage, (void *)&(param.clientSocket));
 
-	pthread_join(prepServer, NULL);
-	pthread_join(getClient, NULL);
 	pthread_join(send, NULL);
 	pthread_join(get, NULL);
 
