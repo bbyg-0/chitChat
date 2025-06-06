@@ -12,21 +12,22 @@ typedef struct param{
 	socklen_t addrlen;
 	struct sockaddr_in address;
 	char * litAddress;
+	char socketStatus;
 } paramThread;
 
 void inisialisasiParamThread(paramThread * param);
+
+void isiStatus(paramThread * param, char status);
 
 void isiPort(paramThread * param, int port);
 
 void isiAddress(paramThread * param, char * address);
 
-void * preparingServerSocket(void * vParamT);
+void * serverSocket(void * vParamT);
 
-void * preparingClientSocket(void * vParamT);
+void * clientSocket(void * vParamT);
 
-void * gettingClient(void * vParamT);
-
-void * gettingServer(void * vParamT);
+void * repairingServer(void * vParamT);
 
 void * sendMessage (void * client);
 

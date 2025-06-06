@@ -14,21 +14,20 @@
 #define PORT 8080
 int main(int argc, char const* argv[]){
 	
-	pthread_t prepServer, getClient, send, get;
+	pthread_t servSocket, send, get;
 	paramThread param;
 	inisialisasiParamThread(&param);
 	isiPort(&param, PORT);
+	isiStatus(&param, 's');
 
+	void * dump = NULL;
 
-	pthread_create(&prepServer, NULL, preparingServerSocket, (void *)&param);
-	pthread_join(prepServer, NULL);
+	pthread_create(&servSocket, NULL, serverSocket, (void *)&param);
 
-
-	pthread_create(&getClient, NULL, gettingClient, (void *)&param);
 	pthread_create(&send, NULL, sendMessage, (void *)&(param.clientSocket));
-	pthread_create(&get, NULL, getMessage, (void *)&(param.clientSocket));
+	pthread_create(&get, NULL, getMessage, (void *)&param);
 
-	pthread_join(getClient, NULL);
+	pthread_join(servSocket, NULL);
 	pthread_join(send, NULL);
 	pthread_join(get, NULL);
 
