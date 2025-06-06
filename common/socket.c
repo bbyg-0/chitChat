@@ -62,8 +62,6 @@ void * preparingServerSocket(void * vParam){
 		pass = fcntl(((param)->serverSocket), F_SETFL, flags | O_NONBLOCK);
 	}
 	pass = -1;
-
-	// Forcefully attaching socket to the port 8080
 	while(pass < 0){
 		usleep(500000);
 		pass = bind(((param)->serverSocket), (struct sockaddr*)&(param->address), sizeof((param)->address));
@@ -114,13 +112,18 @@ void * gettingClient(void * vParam){
 	}
 
 	while(1){
-		if ((param->clientSocket = accept(((param)->serverSocket), (struct sockaddr*)&(param)->address, &(param)->addrlen)) < 0) {
-			if(errno == EAGAIN || errno == EWOULDBLOCK){
-				usleep(100000);
-				continue;
-			}		}else{
-			break;
+		printf("CLIENT: %d\n", param->clientSocket);
+		while(param->clientSocket < 0){
+			if ((param->clientSocket = accept(((param)->serverSocket), 
+							(struct sockaddr*)&(param)->address, 
+							&(param)->addrlen)) < 0) {
+				if(errno == EAGAIN || errno == EWOULDBLOCK){
+					continue;
+				}		}else{
+				break;
+			}
 		}
+		usleep(100000);
 	}
 
 	return NULL;
@@ -145,6 +148,7 @@ void * sendMessage (void * c){
 	char buffer[1024] = {0};
 
 	while(1){
+		if((*client) < 0){usleep(5000); continue;}
 		printf("SEND:\t"); secureInputString(buffer, 1024);
 		send(*client, buffer, strlen(buffer), 0);
 		memset(buffer, '\0', sizeof(buffer));
@@ -155,11 +159,16 @@ void * sendMessage (void * c){
 void * getMessage (void * c){
 	int * client = (int *)(c);
 	char buffer[1024] = {0};
+	int pass = 0;
 
 	while(1){
-		if(read(*client, buffer, 1024 - 1) >= 0){
+		if((*client) < 0){usleep(5000); continue;}
+		pass = read(*client, buffer, 1024 - 1);
+		if(pass > 0){
 			printf("\nMESSAGE:\t%s\n", buffer);
 			memset(buffer, '\0', sizeof(buffer));
+		}else if(pass == 0){
+			(*client) = -1;
 		}
 	}
 	return NULL;
