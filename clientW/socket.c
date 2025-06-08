@@ -1,7 +1,29 @@
+#include <string.h>
 #include "socket.h"
 
+void inisialisasiSocket(WSADATA * wsa){
+	while(1){
+		if (WSAStartup(MAKEWORD(2,2), wsa) != 0) Sleep(500);
+		else break;
+	}
+}
+
+void inisialisasiParam(paramThread * param){
+	if((param) == NULL) return;
+
+	(param)->serverSocket = INVALID_SOCKET;
+	(param)->clientSocket = INVALID_SOCKET;
+	addrlen = -1;
+	liAddress = NULL;
+	socketStatus = '\0';
+}
+
+void isiPort(paramThread * param, int PORT){
+	if((param) == NULL) return;
+	(param)->address.sin_port = htons(PORT);
+}
+
 DWORD WINAPI clientSocket(LPVOID paraM){
-	WSADATA wsa;
 	SOCKET sock;
 
 	paramThread * param = (paramThread *)paraM;
@@ -10,11 +32,6 @@ DWORD WINAPI clientSocket(LPVOID paraM){
 	int recv_size;
 
 	while(1){
-		while(1){
-			if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) Sleep(500);
-			else break;
-		}
-	
 		// Buat socket
 		while(1){
 		(param)->clientSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -25,7 +42,6 @@ DWORD WINAPI clientSocket(LPVOID paraM){
 		// Siapkan alamat server
 		(param)->address.sin_addr.s_addr = inet_addr("192.168.0.104");
 		(param)->address.sin_family = AF_INET;
-		(param)->address.sin_port = htons(8080);
 	
 		// Connect ke server
 		while(1){
@@ -36,22 +52,49 @@ DWORD WINAPI clientSocket(LPVOID paraM){
 		}
 	
 		printf("Connected to server.\n");
+
+		(param)->socketStatus == 'c';
+
+		while((param)->socketStatus == 'c') Sleep(5000);
 	
-		// Kirim pesan
-		strcpy(message, "Hello from client!");
-		send((param)->clientSocket, message, strlen(message), 0);
-	
-		// Terima balasan
+		closesocket((param)->clientSocket);
+	}
+	return 0;
+}
+
+DWORD WINAPI sendMessage(LPVOID paramT){
+	char buffer[100] = {0};
+
+	paramThread * param = (paramThread *)paramT;
+
+	while(1){
+		while((param)->socketStatus == 'c'){
+		scanf("%s", buffer);
+		send((param)->clientSocket, buffer, strlen(buffer), 0);
+		memset(buffer, 0, strlen(buffer));
+		}
+		Sleep(1000);
+	}
+	return 0;
+}
+
+DWORD WINAPI getMessage(LPVOID param){
+	char buffer[100] = {0};
+
+	paramThread * param = (paramThread *)paramT;
+
+	while(1){
+		while((param)->socketStatus == 'c'){
 		recv_size = recv((param)->clientSocket, server_reply, sizeof(server_reply), 0);
-		if (recv_size == SOCKET_ERROR) {
-			printf("Recv failed. Error: %d\n", WSAGetLastError());
+		if (recv_size == 0) {
+			(param)->socketStatus == 'x';
+			break;
 		} else {
 			server_reply[recv_size] = '\0';
 			printf("Server reply: %s\n", server_reply);
 		}
-	
-		closesocket((param)->clientSocket);
+		}
+		Sleep(1000);
 	}
-	WSACleanup();
 	return 0;
 }

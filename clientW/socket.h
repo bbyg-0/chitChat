@@ -13,6 +13,13 @@ typedef struct parameterThread{
 	char socketStatus;
 } paramThread;
 
+void inisialisasiSocket(WSADATA * wsa);
+
+
+void inisialisasiParam(paramThread * param);
+
+void isiPort(paramThread * param, int PORT);
+
 DWORD WINAPI clientSocket(LPVOID param);
 
 DWORD WINAPI sendMessage(LPVOID param);
