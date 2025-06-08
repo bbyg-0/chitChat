@@ -5,10 +5,21 @@
 
 #pragma comment(lib, "ws2_32.lib") // Link Winsock Library
 
-int main() {
+typedef struct param{
+	SOCKET serverSocket;
+	SOCKET clientSocket;
+	int addrlen;
+	struct sockaddr_in address;
+	char * litAddress;
+	char socketStatus;
+} paramThread;
+
+void clientSocket(paramThread * param){
 	WSADATA wsa;
 	SOCKET sock;
-	struct sockaddr_in server;
+
+	paramThread param;
+
 	char message[1024], server_reply[1024];
 	int recv_size;
 
@@ -20,19 +31,19 @@ int main() {
 	}
 
 	// Buat socket
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == INVALID_SOCKET) {
+	(param)->clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if ((param)->clientSocket == INVALID_SOCKET) {
 		printf("Could not create socket. Error: %d\n", WSAGetLastError());
 		return 1;
 	}
 
 	// Siapkan alamat server
-	server.sin_addr.s_addr = inet_addr("127.0.0.1");
-	server.sin_family = AF_INET;
-	server.sin_port = htons(8888);
+	(param)->address.sin_addr.s_addr = inet_addr("192.168.0.104");
+	(param)->address.sin_family = AF_INET;
+	(param)->address.sin_port = htons(8080);
 
 	// Connect ke server
-	if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
+	if (connect((param)->clientSocket, (struct sockaddr *)&(param)->address, sizeof((param)->address)) < 0) {
 		printf("Connect failed. Error: %d\n", WSAGetLastError());
 		return 1;
 	}
@@ -41,10 +52,10 @@ int main() {
 
 	// Kirim pesan
 	strcpy(message, "Hello from client!");
-	send(sock, message, strlen(message), 0);
+	send((param)->clientSocket, message, strlen(message), 0);
 
 	// Terima balasan
-	recv_size = recv(sock, server_reply, sizeof(server_reply), 0);
+	recv_size = recv((param)->clientSocket, server_reply, sizeof(server_reply), 0);
 	if (recv_size == SOCKET_ERROR) {
 		printf("Recv failed. Error: %d\n", WSAGetLastError());
 	} else {
@@ -52,8 +63,16 @@ int main() {
 		printf("Server reply: %s\n", server_reply);
 	}
 
-	closesocket(sock);
+	closesocket((param)->clientSocket);
 	WSACleanup();
+
+}
+
+int main() {
+	paramThread param;
+
+	clientSocket(&param);
+
 	return 0;
 }
 
