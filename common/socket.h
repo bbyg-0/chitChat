@@ -2,6 +2,7 @@
 
 #ifdef _WIN32
 	#include <winsock2.h>
+	#include <windows.h>
 
 	typedef SOCKET socket_t;
 	typedef int socklen_custom_t;
