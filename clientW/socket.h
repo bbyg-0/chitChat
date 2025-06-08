@@ -13,5 +13,8 @@ typedef struct parameterThread{
 	char socketStatus;
 } paramThread;
 
-DWORD WINAPI clientSocket(LPVOID paraM);
+DWORD WINAPI clientSocket(LPVOID param);
 
+DWORD WINAPI sendMessage(LPVOID param);
+
+DWORD WINAPI getMessage(LPVOID param);
