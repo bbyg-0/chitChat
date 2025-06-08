@@ -14,7 +14,7 @@ typedef struct parameterThread{
 	char socketStatus;
 } paramThread;
 
-int clientSocket(paramThread * param){
+DWORD WINAPI clientSocket(LPVOID param){
 	WSADATA wsa;
 	SOCKET sock;
 
@@ -25,14 +25,14 @@ int clientSocket(paramThread * param){
 	printf("Initializing Winsock...\n");
 	if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) {
 		printf("Failed. Error Code: %d\n", WSAGetLastError());
-		return 1;
+		return NULL;
 	}
 
 	// Buat socket
 	(param)->clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if ((param)->clientSocket == INVALID_SOCKET) {
 		printf("Could not create socket. Error: %d\n", WSAGetLastError());
-		return 1;
+		return NULL;
 	}
 
 	// Siapkan alamat server
@@ -43,7 +43,7 @@ int clientSocket(paramThread * param){
 	// Connect ke server
 	if (connect((param)->clientSocket, (struct sockaddr *)&(param)->address, sizeof((param)->address)) < 0) {
 		printf("Connect failed. Error: %d\n", WSAGetLastError());
-		return 1;
+		return NULL;
 	}
 
 	printf("Connected to server.\n");
@@ -64,11 +64,19 @@ int clientSocket(paramThread * param){
 	closesocket((param)->clientSocket);
 	WSACleanup();
 
+	return NULL;
 }
 
 int main() {
+	HANDLE thread;
+	DWORD threadId;
 	paramThread param;
 
-	return clientSocket(&param);
+	thread = CreateThread(NULL, 0, clientSocket, (LPVOID)&param, 0, &threadId);
+
+	WaitForSingleObject(thread, INFINITE);
+	CloseHandle(thread);
+
+	return 0;
 }
 
