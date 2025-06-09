@@ -95,46 +95,44 @@ DWORD WINAPI serverSocket(LPVOID paramT){
 }
 #else
 void * serverSocket(void * vParam){
-	int pass = -1;
 	int opt = 1;
 
 	paramThread * param = (paramThread *)vParam;
 	
 	while(1){	
-		while(pass < 0){
-			usleep(500000);
+		while(1){
 			((param)->serverSocket) = socket(AF_INET, SOCK_STREAM, 0);
-			pass = ((param)->serverSocket);
+			if ((param)->serverSocket < 0) usleep(500000);
+			else break;
+
 		}
-		pass = -1;
-		// Forcefully attaching socket to the port 8080
-		while(pass < 0){
-			usleep(500000);
-			pass = setsockopt(((param)->serverSocket), SOL_SOCKET,
+		while(1){
+			if(setsockopt(((param)->serverSocket), SOL_SOCKET,
 					SO_REUSEADDR | SO_REUSEPORT, 
-					&opt, sizeof(opt));
+					&opt, sizeof(opt)) < 0) usleep(500000);
+			else break;
 		}
-		pass = -1;
 	
 		(param)->address.sin_family = AF_INET;
 		(param)->address.sin_addr.s_addr = INADDR_ANY;
 		
 		int flags = fcntl(((param)->serverSocket), F_GETFL, 0);         // Get current flags
 									
-		while(pass < 0){
-			usleep(500000);
-			pass = fcntl(((param)->serverSocket), F_SETFL, flags | O_NONBLOCK);
+		while(1){
+			if(fcntl(((param)->serverSocket), F_SETFL, flags | O_NONBLOCK) >= 0) break;
+			else usleep(500000);
 		}
-		pass = -1;
-		while(pass < 0){
-			usleep(500000);
-			pass = bind(((param)->serverSocket), (struct sockaddr*)&(param->address), sizeof((param)->address));
+
+		while(1){
+			if(bind(((param)->serverSocket),
+				(struct sockaddr*)&(param->address),
+				sizeof((param)->address)) < 0) usleep(500000);
+			else break;
 		}
-		pass = -1;
 	
-		while(pass < 0){
-			usleep(500000);
-			pass = listen(((param)->serverSocket), 3);
+		while(1){
+			if(listen(((param)->serverSocket), 3) < 0) usleep(500000);
+			else break;
 		}
 	
 		printf("SEBELUM LOOP\n");
@@ -142,15 +140,10 @@ void * serverSocket(void * vParam){
 			while(param->clientSocket < 0){
 				if ((param->clientSocket = accept(((param)->serverSocket), 
 								(struct sockaddr*)&(param)->address, 
-								&(param)->addrlen)) < 0) {
-					if(errno == EAGAIN || errno == EWOULDBLOCK){
-						continue;
-					}
-				}else{
-					break;
-				}
+								&(param)->addrlen)) < 0)
+					usleep(500000);
+				else break;
 			}
-			usleep(100000);
 		}
 	}
 
