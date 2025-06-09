@@ -10,7 +10,7 @@ int main() {
 
 	WSADATA wsa;
 	WSAStartup(MAKEWORD(2,2), &wsa);
-	inisialisasiSocket(&wsa);
+
 
 	isiPort(&param, 8080);
 

@@ -51,6 +51,8 @@ void isiAddress(paramThread * param, char * address){
 	(param)->litAddress = myStrdup(address);
 }
 
+#ifdef _WIN32
+#else
 void * serverSocket(void * vParam){
 	int pass = -1;
 	int opt = 1;
@@ -113,6 +115,7 @@ void * serverSocket(void * vParam){
 
 	return NULL;
 }
+#endif
 
 #ifdef _WIN32
 DWORD WINAPI clientSocket(LPVOID paraM){
@@ -133,7 +136,7 @@ DWORD WINAPI clientSocket(LPVOID paraM){
 		}
 	
 		// Siapkan alamat server
-		(param)->address.sin_addr.s_addr = inet_addr("192.168.0.104");
+		(param)->address.sin_addr.s_addr = inet_addr("192.168.0.102");
 		(param)->address.sin_family = AF_INET;
 	
 		// Connect ke server
