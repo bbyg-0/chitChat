@@ -105,6 +105,8 @@ void * serverSocket(void * vParam){
 	int opt = 1;
 
 	paramThread * param = (paramThread *)vParam;
+
+	isiStatus(param, 'S');
 	
 	while(1){	
 		while(1){
@@ -145,12 +147,14 @@ void * serverSocket(void * vParam){
 		printf("SEBELUM LOOP\n");
 		while(1){
 			while(param->clientSocket < 0){
+				(param)->socketStatus = 'S';
 				if ((param->clientSocket = accept(((param)->serverSocket), 
 								(struct sockaddr*)&(param)->address, 
 								&(param)->addrlen)) < 0)
-					usleep(500000);
-				else break;
+				usleep(500000);
+				else {(param)->socketStatus = 's'; break;}
 			}
+			usleep(1000000);
 		}
 	}
 
@@ -320,7 +324,9 @@ void * getMessage (void * vParam){
 				(param)->socketStatus = 'x';
 			}else return NULL;
 		}
-		}
+		}else printf("YAHAHA WAHYU\n");
+
+		usleep(1000000);
 	}
 	return NULL;
 }
