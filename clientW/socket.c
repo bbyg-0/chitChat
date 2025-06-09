@@ -57,7 +57,9 @@ DWORD WINAPI clientSocket(LPVOID paraM){
 
 		(param)->socketStatus = 'c';
 
-		while((param)->socketStatus == 'c') Sleep(5000);
+		while((param)->socketStatus == 'c') {Sleep(5000);}
+		printf("SEBELUM WHILE: %c\n", (param)->socketStatus);
+
 	
 		closesocket((param)->clientSocket);
 	}
@@ -89,14 +91,15 @@ DWORD WINAPI getMessage(LPVOID paramT){
 
 	while(1){
 		while((param)->socketStatus == 'c'){
-		recv_size = recv((param)->clientSocket, server_reply, sizeof(server_reply), 0);
-		if (recv_size == 0) {
-			(param)->socketStatus == 'x';
-			break;
-		} else {
-			server_reply[recv_size] = '\0';
-			printf("Server reply: %s\n", server_reply);
-		}
+			recv_size = recv((param)->clientSocket, server_reply, sizeof(server_reply), 0);
+			if (recv_size == 0) {
+				(param)->socketStatus = 'x';
+				printf("SOCKET STATUS MENJADI X\n");
+				break;
+			} else {
+				server_reply[recv_size] = '\0';
+				printf("Server reply: %s\n", server_reply);
+			}
 		}
 		Sleep(1000);
 	}
