@@ -18,6 +18,13 @@
 
 void inisialisasiParamThread(paramThread * param){
 #ifdef _WIN32
+	if((param) == NULL) return;
+
+	(param)->serverSocket = INVALID_SOCKET;
+	(param)->clientSocket = INVALID_SOCKET;
+	(param)->addrlen = -1;
+	(param)->litAddress = NULL;
+	(param)->socketStatus = '\0';
 #else
 	if(isEmpty(param)) return;
 	(param)->serverSocket = -1;
@@ -52,6 +59,40 @@ void isiAddress(paramThread * param, char * address){
 }
 
 #ifdef _WIN32
+DWORD WINAPI serverSocket(LPVOID paramT){
+	paramThread * param = (paramThread *)paramT;
+
+	(param)->addrlen = sizeof((param)->address);
+
+	while(1){
+		(param)->serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+		if ((param)->serverSocket == INVALID_SOCKET) Sleep(500);
+		else break;
+	}
+
+	(param)->address.sin_family = AF_INET;
+	(param)->address.sin_addr.s_addr = INADDR_ANY;
+
+	while(1){
+		if (bind((param)->serverSocket,
+			(struct sockaddr *)&(param)->address,
+			sizeof((param)->address)) == SOCKET_ERROR) Sleep(500);
+		else break;
+	}
+
+	while(1){
+		if(listen((param)->serverSocket, 3) < 0) Sleep(500);
+		else break;
+	}
+
+	while(1){
+		(param)->clientSocket = accept((param)->serverSocket,
+						(struct sockaddr *)&client,
+						&(param)->addrlen);
+		if ((param)->clientSocket == INVALID_SOCKET) Sleep(500);
+		
+	}
+}
 #else
 void * serverSocket(void * vParam){
 	int pass = -1;
@@ -119,36 +160,25 @@ void * serverSocket(void * vParam){
 
 #ifdef _WIN32
 DWORD WINAPI clientSocket(LPVOID paraM){
-	SOCKET sock;
-
 	paramThread * param = (paramThread *)paraM;
 
-	char message[1024], server_reply[1024];
-	int recv_size;
-
 	while(1){
-		// Buat socket
 		while(1){
-
 		(param)->clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 			if ((param)->clientSocket == INVALID_SOCKET) Sleep(500);
 			else break;
 		}
 	
-		// Siapkan alamat server
-		(param)->address.sin_addr.s_addr = inet_addr("192.168.0.102");
 		(param)->address.sin_family = AF_INET;
 	
-		// Connect ke server
 		while(1){
-		printf("asdasd\n");
 			if (connect((param)->clientSocket,
 					(struct sockaddr *)&(param)->address,
 					sizeof((param)->address)) < 0) Sleep(500);
 			else break;
 		}
 	
-		printf("Connected to server.\n");
+		printf("CONNECTED TO SERVER\n");
 
 		(param)->socketStatus = 'c';
 

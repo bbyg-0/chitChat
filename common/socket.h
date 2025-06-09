@@ -43,6 +43,8 @@ void isiAddress(paramThread * param, char * address);
 #ifdef _WIN32
 void inisialisasiSocket(WSADATA * wsa);
 
+DWORD WINAPI serverSocket(LPVOID param);
+
 DWORD WINAPI clientSocket(LPVOID param);
 
 DWORD WINAPI sendMessage(LPVOID param);
