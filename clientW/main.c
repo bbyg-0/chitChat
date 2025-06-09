@@ -5,7 +5,7 @@
 
 #pragma comment(lib, "ws2_32.lib") // Link Winsock Library
 
-typedef struct param{
+typedef struct parameterThread{
 	SOCKET serverSocket;
 	SOCKET clientSocket;
 	int addrlen;
@@ -14,11 +14,9 @@ typedef struct param{
 	char socketStatus;
 } paramThread;
 
-void clientSocket(paramThread * param){
+int clientSocket(paramThread * param){
 	WSADATA wsa;
 	SOCKET sock;
-
-	paramThread param;
 
 	char message[1024], server_reply[1024];
 	int recv_size;
@@ -71,8 +69,6 @@ void clientSocket(paramThread * param){
 int main() {
 	paramThread param;
 
-	clientSocket(&param);
-
-	return 0;
+	return clientSocket(&param);
 }
 
