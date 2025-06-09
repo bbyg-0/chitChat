@@ -1,4 +1,3 @@
-// File: server.c
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <winsock2.h>
 #include <stdio.h>
@@ -7,17 +6,13 @@
 
 #pragma comment(lib, "ws2_32.lib") // Link Winsock Library
 #define PORT 8080
-#define ADDRESS "127.0.0.1"
 
 int main() {
-	WSADATA wsa;
-
 	paramThread param;
 
 	inisialisasiParamThread(&param);
 	isiPort(&param, PORT);
-	isiAddress(&param, ADDRESS);
-	isiStatus(&param, 's');
+	isiStatus(&param, 'S');
 
 #ifdef _WIN32
 	HANDLE servSocket, sendMSG, getMSG;

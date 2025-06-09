@@ -37,8 +37,7 @@ void inisialisasiParamThread(paramThread * param){
 
 void isiStatus(paramThread * param, char status){
 	if(isEmpty(param)) return;
-	if(status != 's' && status != 'c' && status != 'C'){
-		printf("KARAKAKTER YANG DITERIMA HANYA:\n\t- s : server\n\t- c : client\n");
+	if(status != 's' && status != 'c' && status != 'C' && status != 'S' && status != 'x' && status != 'X'){
 		return;
 	}else printf("ISI STATUS BERHASIL\n");
 
@@ -58,11 +57,17 @@ void isiAddress(paramThread * param, char * address){
 	(param)->litAddress = myStrdup(address);
 }
 
+// JENIS-JENIS STATUS BUAT CLIENT:
+// S : awalan, gak konek ke server
+// s : konek ke server
+// X : coba konek atau pernah konek tapi gak lagi karena server mati
 #ifdef _WIN32
 DWORD WINAPI serverSocket(LPVOID paramT){
 	paramThread * param = (paramThread *)paramT;
 
 	(param)->addrlen = sizeof((param)->address);
+
+	isiStatus(param, 'S');
 
 	while(1){
 		(param)->serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -86,14 +91,15 @@ DWORD WINAPI serverSocket(LPVOID paramT){
 	}
 
 	while(1){
-		while((param)->socketStatus == 's'){
+		while((param)->socketStatus == 'S' || (param)->socketStatus == 'X'){
+			printf("GETTING CLIENT:\n");
 			(param)->clientSocket = accept((param)->serverSocket,
-							(struct sockaddr *)&client,
+							(struct sockaddr *)&(param)->address,
 							&(param)->addrlen);
 			if ((param)->clientSocket == INVALID_SOCKET) Sleep(500);
-			else (param)->socketStatus = 'S';
+			else (param)->socketStatus = 's';
 		}
-		while((param)->socketStatus == 'S') Sleep(500);
+		while((param)->socketStatus == 's') Sleep(500);
 	}
 }
 #else
@@ -153,7 +159,10 @@ void * serverSocket(void * vParam){
 	return NULL;
 }
 #endif
-
+// JENIS-JENIS STATUS BUAT CLIENT:
+// C : awalan, gak konek ke server
+// c : konek ke server
+// x : coba konek atau pernah konek tapi gak lagi karena server mati
 #ifdef _WIN32
 DWORD WINAPI clientSocket(LPVOID paraM){
 	paramThread * param = (paramThread *)paraM;
@@ -166,8 +175,10 @@ DWORD WINAPI clientSocket(LPVOID paraM){
 		}
 	
 		(param)->address.sin_family = AF_INET;
+		(param)->address.sin_addr.s_addr = inet_addr((param)->litAddress);
 	
 		while(1){
+			printf("asdasd\n");
 			if (connect((param)->clientSocket,
 					(struct sockaddr *)&(param)->address,
 					sizeof((param)->address)) < 0) Sleep(500);
@@ -207,6 +218,8 @@ void * clientSocket(void * vParam){
 		}
 	
 		(param)->address.sin_family = AF_INET;
+		(param)->address.sin_addr.s_addr = inet_addr((param)->litAddress);
+
 		
 		while(1){
 			if(inet_pton(AF_INET, (param)->litAddress, &(param)->address.sin_addr) < 0 )
@@ -214,10 +227,6 @@ void * clientSocket(void * vParam){
 			else break;
 		}
 	
-		// JENIS-JENIS STATUS BUAT CLIENT:
-		// C : awalan, gak konek ke server
-		// c : konek ke server
-		// x : coba konek atau pernah konek tapi gak lagi karena server mati
 		while(1){
 			if ((param)->socketStatus == 'C'){
 				if( connect((param)->clientSocket,
@@ -242,7 +251,7 @@ DWORD WINAPI sendMessage(LPVOID paramT){
 	paramThread * param = (paramThread *)paramT;
 
 	while(1){
-		while((param)->socketStatus == 'c'){
+		while((param)->socketStatus == 'c' || (param)->socketStatus == 's'){
 		scanf("%s", buffer);
 		send((param)->clientSocket, buffer, strlen(buffer), 0);
 		memset(buffer, 0, strlen(buffer));
@@ -280,7 +289,7 @@ DWORD WINAPI getMessage(LPVOID paramT){
 			recv_size = recv((param)->clientSocket, server_reply, sizeof(server_reply), 0);
 			if (recv_size == 0) {
 				if((param)->socketStatus == 'c') (param)->socketStatus = 'x';
-				else (param)->socketStatus = 'S';
+				else (param)->socketStatus = 'X';
 				break;
 			} else {
 				server_reply[recv_size] = '\0';
