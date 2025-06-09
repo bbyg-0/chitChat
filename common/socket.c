@@ -193,63 +193,47 @@ DWORD WINAPI clientSocket(LPVOID paraM){
 #else
 void * clientSocket(void * vParam){
 	int opt = 1;
-	int pass = -1;
 	paramThread * param = (paramThread *)vParam;
 
 	while(1){
 		isiStatus(param, 'C');
-		while(pass < 0){
-			usleep(500000);
-			((param)->clientSocket = socket(AF_INET, SOCK_STREAM, 0));	
-			pass = (param)->clientSocket;
+		while(1){
+			(param)->clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+			if((param)->clientSocket < 0) usleep(500000);
+			else break;
 		}
-		pass = -1;
 	
-		while(pass < 0){
-			usleep(500000);
-			pass = setsockopt(((param)->clientSocket), SOL_SOCKET,
+		while(1){
+			if(setsockopt(((param)->clientSocket), SOL_SOCKET,
 					SO_REUSEADDR | SO_REUSEPORT, 
-					&opt, sizeof(opt));
+					&opt, sizeof(opt)) < 0) usleep(500000);
+			else break;
 		}
-		pass = -1;
 	
 		(param)->address.sin_family = AF_INET;
 		
-		while(pass < 0){
-			usleep(500000);
-			pass = inet_pton(AF_INET, (param)->litAddress, &(param)->address.sin_addr);
+		while(1){
+			if(inet_pton(AF_INET, (param)->litAddress, &(param)->address.sin_addr) < 0 )
+				usleep(500000);
+			else break;
 		}
-		pass = 0;
 	
 		// JENIS-JENIS STATUS BUAT CLIENT:
 		// C : awalan, gak konek ke server
 		// c : konek ke server
-		// x : pernah konek ke server, tapi gak lagi karena server mati
-		while(pass == 0){
-			while ((param)->socketStatus == 'C' && pass == 0){
-				usleep(50000);
+		// x : coba konek atau pernah konek tapi gak lagi karena server mati
+		while(1){
+			if ((param)->socketStatus == 'C'){
 				if( connect((param)->clientSocket,
 						(struct sockaddr*)&(param)->address, 
 						sizeof((param)->address)) >= 0)
 					(param)->socketStatus = 'c';
-				else {
-					if ((param)->socketStatus == 'x'){
-						pass = -1;
-						close((param)->clientSocket);
-						break;
-					}
-				}
-				printf("GETTING SERVER\n");
+				else (param)->socketStatus = 'x';
 			}
-			if ((param)->socketStatus == 'x'){
-				pass = -1;
-				close((param)->clientSocket);
-				break;
-			}
-		usleep(1000000);
+			while((param)->socketStatus == 'c') usleep(500000);
+			if ((param)->socketStatus == 'x'){ close((param)->clientSocket); break;}
 		}
-	printf("KELUAR LOOP\n");
-	usleep(1000000);
+		printf("\nKELUAR LOOP\n"); usleep(1000000);
 	}
 	return NULL;
 }
@@ -296,15 +280,16 @@ DWORD WINAPI getMessage(LPVOID paramT){
 	int recv_size = 0;
 
 	while(1){
-		while((param)->socketStatus == 'c'){
+		while((param)->socketStatus == 'c' || (param)->socketStatus == 'x'){
 			recv_size = recv((param)->clientSocket, server_reply, sizeof(server_reply), 0);
 			if (recv_size == 0) {
-				(param)->socketStatus = 'x';
-				printf("SOCKET STATUS MENJADI X\n");
+				if((param)->socketStatus == 'c') (param)->socketStatus = 'x';
+				else (param)->socketStatus = 'S';
 				break;
 			} else {
 				server_reply[recv_size] = '\0';
 				printf("Server reply: %s\n", server_reply);
+				memset(server_reply, '\0', sizeof(server_reply));
 			}
 		}
 		Sleep(1000);
