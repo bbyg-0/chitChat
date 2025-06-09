@@ -13,9 +13,9 @@ void inisialisasiParam(paramThread * param){
 
 	(param)->serverSocket = INVALID_SOCKET;
 	(param)->clientSocket = INVALID_SOCKET;
-	addrlen = -1;
-	liAddress = NULL;
-	socketStatus = '\0';
+	(param)->addrlen = -1;
+	(param)->litAddress = NULL;
+	(param)->socketStatus = '\0';
 }
 
 void isiPort(paramThread * param, int PORT){
@@ -34,6 +34,7 @@ DWORD WINAPI clientSocket(LPVOID paraM){
 	while(1){
 		// Buat socket
 		while(1){
+
 		(param)->clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 			if ((param)->clientSocket == INVALID_SOCKET) Sleep(500);
 			else break;
@@ -45,6 +46,7 @@ DWORD WINAPI clientSocket(LPVOID paraM){
 	
 		// Connect ke server
 		while(1){
+		printf("asdasd\n");
 			if (connect((param)->clientSocket,
 					(struct sockaddr *)&(param)->address,
 					sizeof((param)->address)) < 0) Sleep(500);
@@ -53,7 +55,7 @@ DWORD WINAPI clientSocket(LPVOID paraM){
 	
 		printf("Connected to server.\n");
 
-		(param)->socketStatus == 'c';
+		(param)->socketStatus = 'c';
 
 		while((param)->socketStatus == 'c') Sleep(5000);
 	
@@ -78,10 +80,12 @@ DWORD WINAPI sendMessage(LPVOID paramT){
 	return 0;
 }
 
-DWORD WINAPI getMessage(LPVOID param){
-	char buffer[100] = {0};
+DWORD WINAPI getMessage(LPVOID paramT){
+	char server_reply[100] = {0};
 
 	paramThread * param = (paramThread *)paramT;
+
+	int recv_size = 0;
 
 	while(1){
 		while((param)->socketStatus == 'c'){
