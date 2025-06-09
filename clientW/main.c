@@ -1,7 +1,7 @@
 // File: client.c
 
 #include <winsock2.h>
-#include "socket.h"
+#include "../common/socket.h"
 
 int main() {
 	HANDLE cliSocket, sendMSG, getMSG;

@@ -1,24 +1,31 @@
 #include "socket.h"
 #include "common.h"
 
-#include <pthread.h>
-#include <string.h>
-#include <errno.h>
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <fcntl.h>
+#ifdef _WIN32
+#else
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <pthread.h>
+#include <string.h>
+#include <arpa/inet.h>
+#endif
+
+#include <errno.h>
+#include <stdio.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 
 void inisialisasiParamThread(paramThread * param){
+#ifdef _WIN32
+#else
 	if(isEmpty(param)) return;
 	(param)->serverSocket = -1;
 	(param)->clientSocket = -1;
 	(param)->addrlen = 0;
 	(param)->litAddress = NULL;
 	(param)->socketStatus = '\0';
+#endif
 }
 
 void isiStatus(paramThread * param, char status){
@@ -107,6 +114,50 @@ void * serverSocket(void * vParam){
 	return NULL;
 }
 
+#ifdef _WIN32
+DWORD WINAPI clientSocket(LPVOID paraM){
+	SOCKET sock;
+
+	paramThread * param = (paramThread *)paraM;
+
+	char message[1024], server_reply[1024];
+	int recv_size;
+
+	while(1){
+		// Buat socket
+		while(1){
+
+		(param)->clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+			if ((param)->clientSocket == INVALID_SOCKET) Sleep(500);
+			else break;
+		}
+	
+		// Siapkan alamat server
+		(param)->address.sin_addr.s_addr = inet_addr("192.168.0.104");
+		(param)->address.sin_family = AF_INET;
+	
+		// Connect ke server
+		while(1){
+		printf("asdasd\n");
+			if (connect((param)->clientSocket,
+					(struct sockaddr *)&(param)->address,
+					sizeof((param)->address)) < 0) Sleep(500);
+			else break;
+		}
+	
+		printf("Connected to server.\n");
+
+		(param)->socketStatus = 'c';
+
+		while((param)->socketStatus == 'c') {Sleep(5000);}
+		printf("SEBELUM WHILE: %c\n", (param)->socketStatus);
+
+	
+		closesocket((param)->clientSocket);
+	}
+	return 0;
+}
+#else
 void * clientSocket(void * vParam){
 	int opt = 1;
 	int pass = -1;
@@ -167,11 +218,27 @@ void * clientSocket(void * vParam){
 	printf("KELUAR LOOP\n");
 	usleep(1000000);
 	}
-
-
 	return NULL;
 }
+#endif
 
+#ifdef _WIN32
+DWORD WINAPI sendMessage(LPVOID paramT){
+	char buffer[100] = {0};
+
+	paramThread * param = (paramThread *)paramT;
+
+	while(1){
+		while((param)->socketStatus == 'c'){
+		scanf("%s", buffer);
+		send((param)->clientSocket, buffer, strlen(buffer), 0);
+		memset(buffer, 0, strlen(buffer));
+		}
+		Sleep(1000);
+	}
+	return 0;
+}
+#else
 void * sendMessage (void * c){
 	printf("INSIDE sendMessage\n");
 	int * client = (int *)(c);
@@ -185,7 +252,33 @@ void * sendMessage (void * c){
 	}
 	return NULL;
 }
+#endif
 
+#ifdef _WIN32
+DWORD WINAPI getMessage(LPVOID paramT){
+	char server_reply[100] = {0};
+
+	paramThread * param = (paramThread *)paramT;
+
+	int recv_size = 0;
+
+	while(1){
+		while((param)->socketStatus == 'c'){
+			recv_size = recv((param)->clientSocket, server_reply, sizeof(server_reply), 0);
+			if (recv_size == 0) {
+				(param)->socketStatus = 'x';
+				printf("SOCKET STATUS MENJADI X\n");
+				break;
+			} else {
+				server_reply[recv_size] = '\0';
+				printf("Server reply: %s\n", server_reply);
+			}
+		}
+		Sleep(1000);
+	}
+	return 0;
+}
+#else
 void * getMessage (void * vParam){
 	printf("INSIDE getMessage\n");
 	char buffer[1024] = {0};
@@ -212,3 +305,4 @@ void * getMessage (void * vParam){
 	}
 	return NULL;
 }
+#endif
