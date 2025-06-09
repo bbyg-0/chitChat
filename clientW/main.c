@@ -14,9 +14,11 @@ typedef struct parameterThread{
 	char socketStatus;
 } paramThread;
 
-DWORD WINAPI clientSocket(LPVOID param){
+DWORD WINAPI clientSocket(LPVOID paraM){
 	WSADATA wsa;
 	SOCKET sock;
+
+	paramThread * param = (paramThread *)paraM;
 
 	char message[1024], server_reply[1024];
 	int recv_size;
@@ -25,14 +27,14 @@ DWORD WINAPI clientSocket(LPVOID param){
 	printf("Initializing Winsock...\n");
 	if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) {
 		printf("Failed. Error Code: %d\n", WSAGetLastError());
-		return NULL;
+		return 1;
 	}
 
 	// Buat socket
 	(param)->clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if ((param)->clientSocket == INVALID_SOCKET) {
 		printf("Could not create socket. Error: %d\n", WSAGetLastError());
-		return NULL;
+		return 1;
 	}
 
 	// Siapkan alamat server
@@ -43,7 +45,7 @@ DWORD WINAPI clientSocket(LPVOID param){
 	// Connect ke server
 	if (connect((param)->clientSocket, (struct sockaddr *)&(param)->address, sizeof((param)->address)) < 0) {
 		printf("Connect failed. Error: %d\n", WSAGetLastError());
-		return NULL;
+		return 1;
 	}
 
 	printf("Connected to server.\n");
@@ -64,7 +66,7 @@ DWORD WINAPI clientSocket(LPVOID param){
 	closesocket((param)->clientSocket);
 	WSACleanup();
 
-	return NULL;
+	return 0;
 }
 
 int main() {
