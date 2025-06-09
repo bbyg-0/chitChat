@@ -67,8 +67,6 @@ DWORD WINAPI serverSocket(LPVOID paramT){
 
 	(param)->addrlen = sizeof((param)->address);
 
-	isiStatus(param, 'S');
-
 	while(1){
 		(param)->serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 		if ((param)->serverSocket == INVALID_SOCKET) Sleep(500);
@@ -178,7 +176,6 @@ DWORD WINAPI clientSocket(LPVOID paraM){
 		(param)->address.sin_addr.s_addr = inet_addr((param)->litAddress);
 	
 		while(1){
-			printf("asdasd\n");
 			if (connect((param)->clientSocket,
 					(struct sockaddr *)&(param)->address,
 					sizeof((param)->address)) < 0) Sleep(500);
@@ -252,7 +249,6 @@ DWORD WINAPI sendMessage(LPVOID paramT){
 
 	while(1){
 		while((param)->socketStatus == 'c' || (param)->socketStatus == 's'){
-		scanf("%s", buffer);
 		send((param)->clientSocket, buffer, strlen(buffer), 0);
 		memset(buffer, 0, strlen(buffer));
 		}
@@ -287,7 +283,7 @@ DWORD WINAPI getMessage(LPVOID paramT){
 	while(1){
 		while((param)->socketStatus == 'c' || (param)->socketStatus == 's'){
 			recv_size = recv((param)->clientSocket, server_reply, sizeof(server_reply), 0);
-			if (recv_size == 0) {
+			if (recv_size == 0 || recv_size == SOCKET_ERROR) {
 				if((param)->socketStatus == 'c') (param)->socketStatus = 'x';
 				else (param)->socketStatus = 'X';
 				break;
