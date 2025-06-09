@@ -86,11 +86,14 @@ DWORD WINAPI serverSocket(LPVOID paramT){
 	}
 
 	while(1){
-		(param)->clientSocket = accept((param)->serverSocket,
-						(struct sockaddr *)&client,
-						&(param)->addrlen);
-		if ((param)->clientSocket == INVALID_SOCKET) Sleep(500);
-		
+		while((param)->socketStatus == 's'){
+			(param)->clientSocket = accept((param)->serverSocket,
+							(struct sockaddr *)&client,
+							&(param)->addrlen);
+			if ((param)->clientSocket == INVALID_SOCKET) Sleep(500);
+			else (param)->socketStatus = 'S';
+		}
+		while((param)->socketStatus == 'S') Sleep(500);
 	}
 }
 #else
@@ -273,7 +276,7 @@ DWORD WINAPI getMessage(LPVOID paramT){
 	int recv_size = 0;
 
 	while(1){
-		while((param)->socketStatus == 'c' || (param)->socketStatus == 'x'){
+		while((param)->socketStatus == 'c' || (param)->socketStatus == 's'){
 			recv_size = recv((param)->clientSocket, server_reply, sizeof(server_reply), 0);
 			if (recv_size == 0) {
 				if((param)->socketStatus == 'c') (param)->socketStatus = 'x';
