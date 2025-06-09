@@ -253,6 +253,7 @@ DWORD WINAPI sendMessage(LPVOID paramT){
 
 	while(1){
 		while((param)->socketStatus == 'c' || (param)->socketStatus == 's'){
+		printf("SEND:\t"); secureInputString(buffer, 1024);
 		send((param)->clientSocket, buffer, strlen(buffer), 0);
 		memset(buffer, 0, strlen(buffer));
 		}
